@@ -2,11 +2,13 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState } from 'react'
 import NFT from '../components/NFT';
+
 const Home = () => {
   const [wallet, setWalletAddress] = useState('')
   const [collection, setCollectionAddress] = useState('')
   const [NFTS, setNFTS] = useState([])
   const [fetchCollection, setFetchCollection] = useState(false)
+  const [startToken,setStartToken]=useState('');
   const walletAddressHandler = (e) => {
     setWalletAddress(e.target.value)
   }
@@ -33,6 +35,7 @@ const Home = () => {
       console.log('hereeee')
       const fetchURL = `${baseURL}?owner=${wallet}&contractAddresses%5B%5D=${collection}`
       const response = await fetch(fetchURL, requestOptions)
+      console.log(response)
       nfts = await response.json()
       console.log(nfts)
     }
@@ -50,12 +53,16 @@ const Home = () => {
       }
       const api_key = 'mKnq5UtNG9Q9ewTgccuG5OLWnqQxIaPl'
       const baseURL = `https://eth-mainnet.alchemyapi.io/v2/${api_key}/getNFTsForCollection/`
-      const fetchURL = `${baseURL}?contractAddress=${collection}&withMetadata=${'true'}`
+      const fetchURL = `${baseURL}?contractAddress=${collection}&withMetadata=${'true'}&startToken=${startToken}`
       const response = await fetch(fetchURL, requestOptions)
+      console.log(response)
       const nfts = await response.json()
       if(nfts){
         console.log('nfts of collection: ',nfts.nfts);
-        setNFTS(nfts.nfts);
+        setNFTS([...NFTS,...nfts.nfts]);
+        if(nfts.nextToken){
+          setStartToken(nfts.nextToken);
+        }
       }
       }
   }
@@ -68,6 +75,7 @@ const Home = () => {
   }
   console.log('nfts state : ', NFTS)
   return (
+  <div>
     <div className="flex flex-col items-center justify-center py-8 gap-y-3">
       <div className="flex flex-col w-full justify-center items-center gap-y-2">
         <input
@@ -90,6 +98,7 @@ const Home = () => {
         <button onClick={fetchNFTS} className={"disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"}>Lets go!!</button>
       </div>
       <div className='flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center'>
+        {console.log(NFTS)}
         {NFTS.length===0?(<h2>No NFTS</h2>):NFTS.map((nft,i)=>{
           return(
             <NFT nft={nft} key={i}></NFT>
@@ -97,6 +106,16 @@ const Home = () => {
         })}
       </div>
     </div>
+    <div className='flex justify-center'>
+      {NFTS.length?<button
+    className="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+    onClick={fetchNFTS}
+    >
+        Load more
+    </button>:""}
+    
+    </div>
+  </div>
   )
 }
 
